@@ -38,12 +38,6 @@
 
 #include <ignition/transport/Node.hh>
 
-#if GZ_PLUGIN_VER == 1
-  namespace SIM_NAMESPACE=ignition::gazebo;
-#else
-  namespace SIM_NAMESPACE=gz::sim;  
-#endif
-
 
 #include <hardware_interface/hardware_info.hpp>
 

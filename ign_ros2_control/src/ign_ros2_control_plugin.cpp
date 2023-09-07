@@ -28,13 +28,6 @@
 
 #include <ignition/plugin/Register.hh>
 
-#if GZ_PLUGIN_VER == 1
-  namespace SIM_NAMESPACE=ignition::gazebo;
-#else
-  namespace SIM_NAMESPACE=gz::sim;
-#endif
-
-
 
 
 #include <controller_manager/controller_manager.hpp>

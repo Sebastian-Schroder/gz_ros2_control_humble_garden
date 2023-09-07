@@ -21,13 +21,12 @@
 #include <string>
 #include <vector>
 
-
-#if GZ_PLUGIN_VER == 1
   #include <ignition/gazebo/System.hh>
+#if GZ_PLUGIN_VER == 1
+  // #include <ignition/gazebo/System.hh>
   namespace SIM_NAMESPACE=ignition::gazebo;
-
 #else
-  #include <gz/sim/System.hh>
+  // #include <gz/sim/System.hh>
   namespace SIM_NAMESPACE=gz::sim;
 #endif
 

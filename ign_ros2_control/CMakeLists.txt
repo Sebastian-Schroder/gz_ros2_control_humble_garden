@@ -30,7 +30,6 @@ if("$ENV{IGNITION_VERSION}" STREQUAL "citadel")
   message(STATUS "Compiling against Ignition Citadel")
   list(APPEND libraries ignition-gazebo${IGN_GAZEBO_VER})
   
-
 elseif("$ENV{IGNITION_VERSION}" STREQUAL "edifice")
   find_package(ignition-gazebo5 REQUIRED)
   set(IGN_GAZEBO_VER ${ignition-gazebo5_VERSION_MAJOR})
@@ -63,7 +62,7 @@ if(NOT "$ENV{IGNITION_VERSION}" STREQUAL "garden")
 else()
   find_package(gz-plugin2 REQUIRED)
   set(IGN_PLUGIN_VER ${gz-plugin2_VERSION_MAJOR})
-  list(APPEND libraries gz-plugin${IGN_GAZEBO_VER})
+  list(APPEND libraries gz-plugin${IGN_PLUGIN_VER})
 endif()
 
 
@@ -78,9 +77,7 @@ add_library(${PROJECT_NAME}-system SHARED
 )
 
 target_link_libraries(${PROJECT_NAME}-system
-  # ${libraries}
-  gz-plugin2
-  gz-sim7
+  ${libraries}
 )
 ament_target_dependencies(${PROJECT_NAME}-system
   ament_index_cpp
@@ -103,8 +100,7 @@ ament_target_dependencies(ign_hardware_plugins
   rclcpp
 )
 target_link_libraries(ign_hardware_plugins
-  gz-plugin2
-  gz-sim7
+${libraries}
 )
 
 ## Install

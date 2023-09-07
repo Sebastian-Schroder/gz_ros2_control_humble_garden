@@ -26,11 +26,9 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 #if GZ_PLUGIN_VER == 1
-namespace SIM_NAMESPACE=ignition::gazebo;
-
+  namespace SIM_NAMESPACE=ignition::gazebo;
 #else
-
-namespace SIM_NAMESPACE=gz::sim;
+  namespace SIM_NAMESPACE=gz::sim;
 #endif
 
 

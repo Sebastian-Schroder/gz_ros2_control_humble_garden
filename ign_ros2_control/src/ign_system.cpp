@@ -38,6 +38,12 @@
 
 #include <ignition/transport/Node.hh>
 
+#if GZ_PLUGIN_VER == 1
+  namespace SIM_NAMESPACE=ignition::gazebo;
+#else
+  namespace SIM_NAMESPACE=gz::sim;  
+#endif
+
 
 #include <hardware_interface/hardware_info.hpp>
 
@@ -65,7 +71,7 @@ struct jointData
   double joint_effort_cmd;
 
   /// \brief handles to the joints from within Gazebo
-  ignition::gazebo::Entity sim_joint;
+  SIM_NAMESPACE::Entity sim_joint;
 
   /// \brief Control method defined in the URDF for each joint.
   ign_ros2_control::IgnitionSystemInterface::ControlMethod joint_control_method;
@@ -89,7 +95,7 @@ public:
   std::string topicName{};
 
   /// \brief handles to the imu from within Gazebo
-  ignition::gazebo::Entity sim_imu_sensors_ = ignition::gazebo::kNullEntity;
+  SIM_NAMESPACE::Entity sim_imu_sensors_ = SIM_NAMESPACE::kNullEntity;
 
   /// \brief An array per IMU with 4 orientation, 3 angular velocity and 3 linear acceleration
   std::array<double, 10> imu_sensor_data_;
@@ -138,7 +144,7 @@ public:
 
   /// \brief Entity component manager, ECM shouldn't be accessed outside those
   /// methods, otherwise the app will crash
-  ignition::gazebo::EntityComponentManager * ecm;
+  SIM_NAMESPACE::EntityComponentManager * ecm;
 
   /// \brief controller update rate
   int * update_rate;
@@ -157,9 +163,9 @@ namespace ign_ros2_control
 {
 bool IgnitionSystem::initSim(
   rclcpp::Node::SharedPtr & model_nh,
-  std::map<std::string, ignition::gazebo::Entity> & enableJoints,
+  std::map<std::string, SIM_NAMESPACE::Entity> & enableJoints,
   const hardware_interface::HardwareInfo & hardware_info,
-  ignition::gazebo::EntityComponentManager & _ecm,
+  SIM_NAMESPACE::EntityComponentManager & _ecm,
   int & update_rate)
 {
   this->dataPtr = std::make_unique<IgnitionSystemPrivate>();
@@ -195,31 +201,31 @@ bool IgnitionSystem::initSim(
     auto & joint_info = hardware_info.joints[j];
     std::string joint_name = this->dataPtr->joints_[j].name = joint_info.name;
 
-    ignition::gazebo::Entity simjoint = enableJoints[joint_name];
+    SIM_NAMESPACE::Entity simjoint = enableJoints[joint_name];
     this->dataPtr->joints_[j].sim_joint = simjoint;
 
     // Create joint position component if one doesn't exist
     if (!_ecm.EntityHasComponentType(
         simjoint,
-        ignition::gazebo::components::JointPosition().TypeId()))
+        SIM_NAMESPACE::components::JointPosition().TypeId()))
     {
-      _ecm.CreateComponent(simjoint, ignition::gazebo::components::JointPosition());
+      _ecm.CreateComponent(simjoint, SIM_NAMESPACE::components::JointPosition());
     }
 
     // Create joint velocity component if one doesn't exist
     if (!_ecm.EntityHasComponentType(
         simjoint,
-        ignition::gazebo::components::JointVelocity().TypeId()))
+        SIM_NAMESPACE::components::JointVelocity().TypeId()))
     {
-      _ecm.CreateComponent(simjoint, ignition::gazebo::components::JointVelocity());
+      _ecm.CreateComponent(simjoint, SIM_NAMESPACE::components::JointVelocity());
     }
 
     // Create joint force component if one doesn't exist
     if (!_ecm.EntityHasComponentType(
         simjoint,
-        ignition::gazebo::components::JointForce().TypeId()))
+        SIM_NAMESPACE::components::JointForce().TypeId()))
     {
-      _ecm.CreateComponent(simjoint, ignition::gazebo::components::JointForce());
+      _ecm.CreateComponent(simjoint, SIM_NAMESPACE::components::JointForce());
     }
 
     // Accept this joint and continue configuration
@@ -389,17 +395,17 @@ void IgnitionSystem::registerSensors(
   // So we have resize only once the structures where the data will be stored, and we can safely
   // use pointers to the structures
 
-  this->dataPtr->ecm->Each<ignition::gazebo::components::Imu,
-    ignition::gazebo::components::Name>(
-    [&](const ignition::gazebo::Entity & _entity,
-    const ignition::gazebo::components::Imu *,
-    const ignition::gazebo::components::Name * _name) -> bool
+  this->dataPtr->ecm->Each<SIM_NAMESPACE::components::Imu,
+    SIM_NAMESPACE::components::Name>(
+    [&](const SIM_NAMESPACE::Entity & _entity,
+    const SIM_NAMESPACE::components::Imu *,
+    const SIM_NAMESPACE::components::Name * _name) -> bool
     {
       auto imuData = std::make_shared<ImuData>();
       RCLCPP_INFO_STREAM(this->nh_->get_logger(), "Loading sensor: " << _name->Data());
 
       auto sensorTopicComp = this->dataPtr->ecm->Component<
-        ignition::gazebo::components::SensorTopic>(_entity);
+        SIM_NAMESPACE::components::SensorTopic>(_entity);
       if (sensorTopicComp) {
         RCLCPP_INFO_STREAM(this->nh_->get_logger(), "Topic name: " << sensorTopicComp->Data());
       }
@@ -493,18 +499,18 @@ hardware_interface::return_type IgnitionSystem::read(
   for (unsigned int i = 0; i < this->dataPtr->joints_.size(); ++i) {
     // Get the joint velocity
     const auto * jointVelocity =
-      this->dataPtr->ecm->Component<ignition::gazebo::components::JointVelocity>(
+      this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointVelocity>(
       this->dataPtr->joints_[i].sim_joint);
 
     // TODO(ahcorde): Revisit this part ignitionrobotics/ign-physics#124
     // Get the joint force
     // const auto * jointForce =
-    //   _ecm.Component<ignition::gazebo::components::JointForce>(
+    //   _ecm.Component<SIM_NAMESPACE::components::JointForce>(
     //   this->dataPtr->sim_joints_[j]);
 
     // Get the joint position
     const auto * jointPositions =
-      this->dataPtr->ecm->Component<ignition::gazebo::components::JointPosition>(
+      this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointPosition>(
       this->dataPtr->joints_[i].sim_joint);
 
     this->dataPtr->joints_[i].joint_position = jointPositions->Data()[0];
@@ -515,7 +521,7 @@ hardware_interface::return_type IgnitionSystem::read(
   for (unsigned int i = 0; i < this->dataPtr->imus_.size(); ++i) {
     if (this->dataPtr->imus_[i]->topicName.empty()) {
       auto sensorTopicComp = this->dataPtr->ecm->Component<
-        ignition::gazebo::components::SensorTopic>(this->dataPtr->imus_[i]->sim_imu_sensors_);
+        SIM_NAMESPACE::components::SensorTopic>(this->dataPtr->imus_[i]->sim_imu_sensors_);
       if (sensorTopicComp) {
         this->dataPtr->imus_[i]->topicName = sensorTopicComp->Data();
         RCLCPP_INFO_STREAM(
@@ -584,17 +590,17 @@ hardware_interface::return_type IgnitionSystem::write(
 {
   for (unsigned int i = 0; i < this->dataPtr->joints_.size(); ++i) {
     if (this->dataPtr->joints_[i].joint_control_method & VELOCITY) {
-      if (!this->dataPtr->ecm->Component<ignition::gazebo::components::JointVelocityCmd>(
+      if (!this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointVelocityCmd>(
           this->dataPtr->joints_[i].sim_joint))
       {
         this->dataPtr->ecm->CreateComponent(
           this->dataPtr->joints_[i].sim_joint,
-          ignition::gazebo::components::JointVelocityCmd({0}));
+          SIM_NAMESPACE::components::JointVelocityCmd({0}));
       } else {
         const auto jointVelCmd =
-          this->dataPtr->ecm->Component<ignition::gazebo::components::JointVelocityCmd>(
+          this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointVelocityCmd>(
           this->dataPtr->joints_[i].sim_joint);
-        *jointVelCmd = ignition::gazebo::components::JointVelocityCmd(
+        *jointVelCmd = SIM_NAMESPACE::components::JointVelocityCmd(
           {this->dataPtr->joints_[i].joint_velocity_cmd});
       }
     } else if (this->dataPtr->joints_[i].joint_control_method & POSITION) {
@@ -607,41 +613,41 @@ hardware_interface::return_type IgnitionSystem::write(
       double target_vel = -this->dataPtr->position_proportional_gain_ * error;
 
       auto vel =
-        this->dataPtr->ecm->Component<ignition::gazebo::components::JointVelocityCmd>(
+        this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointVelocityCmd>(
         this->dataPtr->joints_[i].sim_joint);
 
       if (vel == nullptr) {
         this->dataPtr->ecm->CreateComponent(
           this->dataPtr->joints_[i].sim_joint,
-          ignition::gazebo::components::JointVelocityCmd({target_vel}));
+          SIM_NAMESPACE::components::JointVelocityCmd({target_vel}));
       } else if (!vel->Data().empty()) {
         vel->Data()[0] = target_vel;
       }
     } else if (this->dataPtr->joints_[i].joint_control_method & EFFORT) {
-      if (!this->dataPtr->ecm->Component<ignition::gazebo::components::JointForceCmd>(
+      if (!this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointForceCmd>(
           this->dataPtr->joints_[i].sim_joint))
       {
         this->dataPtr->ecm->CreateComponent(
           this->dataPtr->joints_[i].sim_joint,
-          ignition::gazebo::components::JointForceCmd({0}));
+          SIM_NAMESPACE::components::JointForceCmd({0}));
       } else {
         const auto jointEffortCmd =
-          this->dataPtr->ecm->Component<ignition::gazebo::components::JointForceCmd>(
+          this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointForceCmd>(
           this->dataPtr->joints_[i].sim_joint);
-        *jointEffortCmd = ignition::gazebo::components::JointForceCmd(
+        *jointEffortCmd = SIM_NAMESPACE::components::JointForceCmd(
           {this->dataPtr->joints_[i].joint_effort_cmd});
       }
     } else {
       // Fallback case is a velocity command of zero
       double target_vel = 0.0;
       auto vel =
-        this->dataPtr->ecm->Component<ignition::gazebo::components::JointVelocityCmd>(
+        this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointVelocityCmd>(
         this->dataPtr->joints_[i].sim_joint);
 
       if (vel == nullptr) {
         this->dataPtr->ecm->CreateComponent(
           this->dataPtr->joints_[i].sim_joint,
-          ignition::gazebo::components::JointVelocityCmd({target_vel}));
+          SIM_NAMESPACE::components::JointVelocityCmd({target_vel}));
       } else if (!vel->Data().empty()) {
         vel->Data()[0] = target_vel;
       }
@@ -654,11 +660,11 @@ hardware_interface::return_type IgnitionSystem::write(
       if (mimic_interface == "position") {
         // Get the joint position
         double position_mimicked_joint =
-          this->dataPtr->ecm->Component<ignition::gazebo::components::JointPosition>(
+          this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointPosition>(
           this->dataPtr->joints_[mimic_joint.mimicked_joint_index].sim_joint)->Data()[0];
 
         double position_mimic_joint =
-          this->dataPtr->ecm->Component<ignition::gazebo::components::JointPosition>(
+          this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointPosition>(
           this->dataPtr->joints_[mimic_joint.joint_index].sim_joint)->Data()[0];
 
         double position_error =
@@ -667,13 +673,13 @@ hardware_interface::return_type IgnitionSystem::write(
         double velocity_sp = (-1.0) * position_error * (*this->dataPtr->update_rate);
 
         auto vel =
-          this->dataPtr->ecm->Component<ignition::gazebo::components::JointVelocityCmd>(
+          this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointVelocityCmd>(
           this->dataPtr->joints_[mimic_joint.joint_index].sim_joint);
 
         if (vel == nullptr) {
           this->dataPtr->ecm->CreateComponent(
             this->dataPtr->joints_[mimic_joint.joint_index].sim_joint,
-            ignition::gazebo::components::JointVelocityCmd({velocity_sp}));
+            SIM_NAMESPACE::components::JointVelocityCmd({velocity_sp}));
         } else if (!vel->Data().empty()) {
           vel->Data()[0] = velocity_sp;
         }
@@ -681,20 +687,20 @@ hardware_interface::return_type IgnitionSystem::write(
       if (mimic_interface == "velocity") {
         // get the velocity of mimicked joint
         double velocity_mimicked_joint =
-          this->dataPtr->ecm->Component<ignition::gazebo::components::JointVelocity>(
+          this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointVelocity>(
           this->dataPtr->joints_[mimic_joint.mimicked_joint_index].sim_joint)->Data()[0];
 
-        if (!this->dataPtr->ecm->Component<ignition::gazebo::components::JointVelocityCmd>(
+        if (!this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointVelocityCmd>(
             this->dataPtr->joints_[mimic_joint.joint_index].sim_joint))
         {
           this->dataPtr->ecm->CreateComponent(
             this->dataPtr->joints_[mimic_joint.joint_index].sim_joint,
-            ignition::gazebo::components::JointVelocityCmd({0}));
+            SIM_NAMESPACE::components::JointVelocityCmd({0}));
         } else {
           const auto jointVelCmd =
-            this->dataPtr->ecm->Component<ignition::gazebo::components::JointVelocityCmd>(
+            this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointVelocityCmd>(
             this->dataPtr->joints_[mimic_joint.joint_index].sim_joint);
-          *jointVelCmd = ignition::gazebo::components::JointVelocityCmd(
+          *jointVelCmd = SIM_NAMESPACE::components::JointVelocityCmd(
             {mimic_joint.multiplier * velocity_mimicked_joint});
         }
       }
@@ -702,19 +708,19 @@ hardware_interface::return_type IgnitionSystem::write(
         // TODO(ahcorde): Revisit this part ignitionrobotics/ign-physics#124
         // Get the joint force
         // const auto * jointForce =
-        //   _ecm.Component<ignition::gazebo::components::JointForce>(
+        //   _ecm.Component<SIM_NAMESPACE::components::JointForce>(
         //   this->dataPtr->sim_joints_[j]);
-        if (!this->dataPtr->ecm->Component<ignition::gazebo::components::JointForceCmd>(
+        if (!this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointForceCmd>(
             this->dataPtr->joints_[mimic_joint.joint_index].sim_joint))
         {
           this->dataPtr->ecm->CreateComponent(
             this->dataPtr->joints_[mimic_joint.joint_index].sim_joint,
-            ignition::gazebo::components::JointForceCmd({0}));
+            SIM_NAMESPACE::components::JointForceCmd({0}));
         } else {
           const auto jointEffortCmd =
-            this->dataPtr->ecm->Component<ignition::gazebo::components::JointForceCmd>(
+            this->dataPtr->ecm->Component<SIM_NAMESPACE::components::JointForceCmd>(
             this->dataPtr->joints_[mimic_joint.joint_index].sim_joint);
-          *jointEffortCmd = ignition::gazebo::components::JointForceCmd(
+          *jointEffortCmd = SIM_NAMESPACE::components::JointForceCmd(
             {mimic_joint.multiplier *
               this->dataPtr->joints_[mimic_joint.mimicked_joint_index].joint_effort});
         }

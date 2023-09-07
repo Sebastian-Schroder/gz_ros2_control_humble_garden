@@ -16,8 +16,16 @@
 #define IGN_ROS2_CONTROL__IGN_ROS2_CONTROL_PLUGIN_HPP_
 
 #include <memory>
-
 #include <ignition/gazebo/System.hh>
+#if GZ_PLUGIN_VER == 1
+  namespace SIM_NAMESPACE=ignition::gazebo;
+#else 
+  namespace SIM_NAMESPACE=gz::sim;
+#endif
+
+
+
+
 
 namespace ign_ros2_control
 {
@@ -25,10 +33,10 @@ namespace ign_ros2_control
 class IgnitionROS2ControlPluginPrivate;
 
 class IgnitionROS2ControlPlugin
-  : public ignition::gazebo::System,
-  public ignition::gazebo::ISystemConfigure,
-  public ignition::gazebo::ISystemPreUpdate,
-  public ignition::gazebo::ISystemPostUpdate
+  : public SIM_NAMESPACE::System,
+  public SIM_NAMESPACE::ISystemConfigure,
+  public SIM_NAMESPACE::ISystemPreUpdate,
+  public SIM_NAMESPACE::ISystemPostUpdate
 {
 public:
   /// \brief Constructor
@@ -39,19 +47,19 @@ public:
 
   // Documentation inherited
   void Configure(
-    const ignition::gazebo::Entity & _entity,
+    const SIM_NAMESPACE::Entity & _entity,
     const std::shared_ptr<const sdf::Element> & _sdf,
-    ignition::gazebo::EntityComponentManager & _ecm,
-    ignition::gazebo::EventManager & _eventMgr) override;
+    SIM_NAMESPACE::EntityComponentManager & _ecm,
+    SIM_NAMESPACE::EventManager & _eventMgr) override;
 
   // Documentation inherited
   void PreUpdate(
-    const ignition::gazebo::UpdateInfo & _info,
-    ignition::gazebo::EntityComponentManager & _ecm) override;
+    const SIM_NAMESPACE::UpdateInfo & _info,
+    SIM_NAMESPACE::EntityComponentManager & _ecm) override;
 
   void PostUpdate(
-    const ignition::gazebo::UpdateInfo & _info,
-    const ignition::gazebo::EntityComponentManager & _ecm) override;
+    const SIM_NAMESPACE::UpdateInfo & _info,
+    const SIM_NAMESPACE::EntityComponentManager & _ecm) override;
 
 private:
   /// \brief Private data pointer.

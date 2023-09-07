@@ -25,6 +25,16 @@
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
+#if GZ_PLUGIN_VER == 1
+namespace SIM_NAMESPACE=ignition::gazebo;
+
+#else
+
+namespace SIM_NAMESPACE=gz::sim;
+#endif
+
+
+
 namespace ign_ros2_control
 {
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -74,9 +84,9 @@ public:
   // Documentation Inherited
   bool initSim(
     rclcpp::Node::SharedPtr & model_nh,
-    std::map<std::string, ignition::gazebo::Entity> & joints,
+    std::map<std::string, SIM_NAMESPACE::Entity> & joints,
     const hardware_interface::HardwareInfo & hardware_info,
-    ignition::gazebo::EntityComponentManager & _ecm,
+    SIM_NAMESPACE::EntityComponentManager & _ecm,
     int & update_rate) override;
 
 private:

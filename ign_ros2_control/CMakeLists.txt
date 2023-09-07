@@ -28,25 +28,48 @@ if("$ENV{IGNITION_VERSION}" STREQUAL "citadel")
   find_package(ignition-gazebo3 REQUIRED)
   set(IGN_GAZEBO_VER ${ignition-gazebo3_VERSION_MAJOR})
   message(STATUS "Compiling against Ignition Citadel")
+  list(APPEND libraries ignition-gazebo${IGN_GAZEBO_VER})
+  
 
 elseif("$ENV{IGNITION_VERSION}" STREQUAL "edifice")
   find_package(ignition-gazebo5 REQUIRED)
   set(IGN_GAZEBO_VER ${ignition-gazebo5_VERSION_MAJOR})
   message(STATUS "Compiling against Ignition Edifice")
+  list(APPEND libraries ignition-gazebo${IGN_GAZEBO_VER})
 
 elseif("$ENV{IGNITION_VERSION}" STREQUAL "fortress")
   find_package(ignition-gazebo6 REQUIRED)
   set(IGN_GAZEBO_VER ${ignition-gazebo6_VERSION_MAJOR})
   message(STATUS "Compiling against Ignition Fortress")
+  list(APPEND libraries ignition-gazebo${IGN_GAZEBO_VER})
+
+elseif("$ENV{IGNITION_VERSION}" STREQUAL "garden")
+  find_package(gz-sim7 REQUIRED)
+  set(IGN_GAZEBO_VER ${gz-sim7_VERSION_MAJOR})
+  message(STATUS "Compiling against Ignition Gazebo")
+  list(APPEND libraries gz-sim${IGN_GAZEBO_VER})
 
 else()
-  find_package(ignition-gazebo6 REQUIRED)
-  set(IGN_GAZEBO_VER ${ignition-gazebo6_VERSION_MAJOR})
-  message(STATUS "Compiling against Ignition Fortress")
+  message(FATAL_ERROR "no gazebo version selected")
 endif()
 
-find_package(ignition-plugin1 REQUIRED)
-set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
+
+if(NOT "$ENV{IGNITION_VERSION}" STREQUAL "garden")
+  find_package(ignition-plugin1 REQUIRED)
+  set(IGN_PLUGIN_VER ${ignition-plugin1_VERSION_MAJOR})
+  list(APPEND libraries ignition-plugin${IGN_PLUGIN_VER})
+
+
+else()
+  find_package(gz-plugin2 REQUIRED)
+  set(IGN_PLUGIN_VER ${gz-plugin2_VERSION_MAJOR})
+  list(APPEND libraries gz-plugin${IGN_GAZEBO_VER})
+endif()
+
+
+# message(FATAL_ERROR ${libraries})
+add_compile_definitions(GZ_PLUGIN_VERSION=${IGN_PLUGIN_VER})
+
 
 include_directories(include)
 
@@ -55,8 +78,9 @@ add_library(${PROJECT_NAME}-system SHARED
 )
 
 target_link_libraries(${PROJECT_NAME}-system
-  ignition-gazebo${IGN_GAZEBO_VER}::core
-  ignition-plugin${IGN_PLUGIN_VER}::register
+  # ${libraries}
+  gz-plugin2
+  gz-sim7
 )
 ament_target_dependencies(${PROJECT_NAME}-system
   ament_index_cpp
@@ -79,7 +103,8 @@ ament_target_dependencies(ign_hardware_plugins
   rclcpp
 )
 target_link_libraries(ign_hardware_plugins
-  ignition-gazebo${IGN_GAZEBO_VER}::core
+  gz-plugin2
+  gz-sim7
 )
 
 ## Install

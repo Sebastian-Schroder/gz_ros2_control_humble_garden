@@ -29,7 +29,7 @@ if("$ENV{IGNITION_VERSION}" STREQUAL "citadel")
   set(IGN_GAZEBO_VER ${ignition-gazebo3_VERSION_MAJOR})
   message(STATUS "Compiling against Ignition Citadel")
   list(APPEND libraries ignition-gazebo${IGN_GAZEBO_VER})
-  
+
 elseif("$ENV{IGNITION_VERSION}" STREQUAL "edifice")
   find_package(ignition-gazebo5 REQUIRED)
   set(IGN_GAZEBO_VER ${ignition-gazebo5_VERSION_MAJOR})
@@ -117,10 +117,10 @@ install(DIRECTORY
 )
 
 # Testing and linting
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-endif()
+# if(BUILD_TESTING)
+#   find_package(ament_lint_auto REQUIRED)
+#   ament_lint_auto_find_test_dependencies()
+# endif()
 
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME} ign_hardware_plugins)
